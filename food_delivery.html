@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Food Delivery App — Factory Method Demo</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#10b981;--glass: rgba(255,255,255,0.03)}
+    body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial; background:linear-gradient(180deg,#051122 0%, #0b1624 100%); color:#e6eef6; margin:0; padding:32px}
+    .wrap{max-width:980px;margin:0 auto}
+    header h1{margin:0 0 8px;font-size:20px}
+    p.lead{color:var(--muted);margin-top:0}
+    .card{background:var(--card);border-radius:12px;padding:16px;margin-top:16px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    .row{display:flex;gap:12px;align-items:center}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,button{font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button{cursor:pointer;border:none;background:linear-gradient(90deg,#065f46 0%, #10b981 100%);color:white}
+    .list{margin-top:12px}
+    .item{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.03)}
+    .meta{font-size:13px;color:var(--muted)}
+    .role{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--glass);font-size:12px;color:var(--accent);margin-left:8px}
+    pre{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,0.25);padding:12px;border-radius:8px}
+    footer{color:var(--muted);font-size:13px;margin-top:18px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Food Delivery App — Factory Method Demo</h1>
+      <p class="lead">Interactive example showing a <strong>Factory Method</strong> that creates <em>Customer</em>, <em>DeliveryPartner</em>, and <em>Restaurant</em> objects in JavaScript.</p>
+    </header>
+
+    <section class="card">
+      <form id="createForm" onsubmit="return false;">
+        <div class="row">
+          <div style="flex:1">
+            <label for="name">Name</label>
+            <input id="name" placeholder="e.g. Alex" required />
+          </div>
+          <div style="width:220px">
+            <label for="role">Role</label>
+            <select id="role">
+              <option value="Customer">Customer</option>
+              <option value="DeliveryPartner">DeliveryPartner</option>
+              <option value="Restaurant">Restaurant</option>
+            </select>
+          </div>
+          <div style="width:220px">
+            <label for="extra">Extra (JSON)</label>
+            <input id="extra" placeholder='e.g. {"address":"MG Road","vehicle":"Bike"}' />
+          </div>
+          <div style="width:140px;display:flex;align-items:flex-end">
+            <button id="createBtn">Create</button>
+          </div>
+        </div>
+      </form>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <button id="seed">Create sample objects</button>
+        <button id="clear">Clear all</button>
+        <button id="export">Export JSON</button>
+      </div>
+
+      <div class="list" id="instances"></div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin:0 0 8px">Notes</h3>
+      <p class="meta">This file demonstrates the Factory Method pattern with a small UI. The factory centralizes object creation so the rest of the app can ask for "a user of role X" without knowing the constructor details.</p>
+      <pre id="codePreview"></pre>
+    </section>
+
+    <footer>Tip: Save this file and open in your browser to try it. No server required.</footer>
+  </div>
+
+  <script>
+    // ----------------------
+    // Domain classes
+    // ----------------------
+    class UserBase {
+      constructor(name){
+        this.id = UserBase._nextId();
+        this.name = name;
+        this.createdAt = new Date().toISOString();
+      }
+      static _nextId(){
+        UserBase._id = (UserBase._id || 0) + 1; return UserBase._id;
+      }
+      summary(){
+        return `${this.constructor.name}(${this.id}) - ${this.name}`;
+      }
+    }
+
+    class Customer extends UserBase {
+      constructor(name, {address} = {}){
+        super(name);
+        this.address = address || 'Unknown address';
+        this.orderHistory = [];
+      }
+      placeOrder(restaurantId, items){
+        const order={orderId:`O-${Date.now()}`,restaurantId,items,status:'placed'};
+        this.orderHistory.push(order);
+        return order;
+      }
+    }
+
+    class DeliveryPartner extends UserBase {
+      constructor(name, {vehicle} = {}){
+        super(name);
+        this.vehicle = vehicle || 'Bike';
+        this.available = true;
+        this.currentOrder = null;
+      }
+      acceptOrder(order){ this.currentOrder = order; this.available=false; }
+      finishOrder(){ this.currentOrder = null; this.available = true; }
+    }
+
+    class Restaurant extends UserBase {
+      constructor(name, {address,menu} = {}){
+        super(name);
+        this.address = address || 'Unknown';
+        this.menu = menu || [{id:1,name:'Margherita',price:8}];
+        this.open = true;
+      }
+      addMenuItem(item){ this.menu.push(item); }
+    }
+
+    // ----------------------
+    // Factory (Factory Method)
+    // ----------------------
+    const UserFactory = {
+      create(type, name, extra = {}){
+        // The factory method: choose constructor based on `type`
+        switch(type){
+          case 'Customer': return new Customer(name, extra);
+          case 'DeliveryPartner': return new DeliveryPartner(name, extra);
+          case 'Restaurant': return new Restaurant(name, extra);
+          default: throw new Error('Unknown type: '+type);
+        }
+      }
+    };
+
+    // ----------------------
+    // Simple in-memory repository + UI glue
+    // ----------------------
+    const store = {
+      items: [],
+      add(it){ this.items.push(it); render(); },
+      clear(){ this.items=[]; render(); },
+      export(){ return JSON.stringify(this.items, replacer, 2); }
+    };
+
+    function replacer(key, value){
+      // Remove circular / function props for export
+      if(typeof value === 'function') return undefined;
+      return value;
+    }
+
+    // UI helpers
+    const instancesEl = document.getElementById('instances');
+    const codePreview = document.getElementById('codePreview');
+
+    function render(){
+      instancesEl.innerHTML = '';
+      if(store.items.length === 0){ instancesEl.innerHTML = '<div class="meta">No instances yet.</div>'; return }
+      store.items.forEach(it => {
+        const div = document.createElement('div'); div.className = 'item';
+        const heading = document.createElement('div'); heading.innerHTML = `<strong>${escapeHtml(it.name)}</strong><span class="role">${it.constructor.name}</span>`;
+        const meta = document.createElement('div'); meta.className = 'meta';
+        meta.innerHTML = `id: ${it.id} • created: ${new Date(it.createdAt).toLocaleString()}`;
+        const body = document.createElement('pre'); body.textContent = JSON.stringify(it, replacer, 2);
+        div.appendChild(heading); div.appendChild(meta); div.appendChild(body);
+        instancesEl.appendChild(div);
+      });
+      codePreview.textContent = `// Example: you can create a new Customer via the factory\nconst c = UserFactory.create('Customer','Alex',{address:'MG Rd'});\nconsole.log(c);`;
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])) }
+
+    // Form handlers
+    document.getElementById('createBtn').addEventListener('click', ()=>{
+      const name = document.getElementById('name').value.trim();
+      const role = document.getElementById('role').value;
+      const extraRaw = document.getElementById('extra').value.trim();
+      if(!name) return alert('Please enter a name');
+      let extra = {};
+      if(extraRaw){
+        try{ extra = JSON.parse(extraRaw); }catch(e){ return alert('Extra must be valid JSON: ' + e.message); }
+      }
+      try{
+        const obj = UserFactory.create(role, name, extra);
+        store.add(obj);
+        document.getElementById('name').value=''; document.getElementById('extra').value='';
+      }catch(err){ alert(err.message); }
+    });
+
+    document.getElementById('seed').addEventListener('click', ()=>{
+      const examples = [
+        UserFactory.create('Customer','Priya',{address:'MG Road'}),
+        UserFactory.create('DeliveryPartner','Ramesh',{vehicle:'Scooter'}),
+        UserFactory.create('Restaurant','SpiceHub',{address:'Brigade Rd',menu:[{id:1,name:'Paneer Butter Masala',price:6}]})
+      ];
+      examples.forEach(e=>store.add(e));
+    });
+
+    document.getElementById('clear').addEventListener('click', ()=>{ if(confirm('Clear all created instances?')) store.clear(); });
+
+    document.getElementById('export').addEventListener('click', ()=>{
+      const json = store.export();
+      const win = window.open('', '_blank');
+      win.document.body.style.background='#0b1220';
+      win.document.body.style.color='#e6eef6';
+      win.document.body.style.fontFamily='monospace';
+      const pre = win.document.createElement('pre'); pre.textContent = json; pre.style.whiteSpace='pre-wrap'; pre.style.padding='12px';
+      win.document.body.appendChild(pre);
+    });
+
+    // initial render
+    render();
+  </script>
+</body>
+</html>
