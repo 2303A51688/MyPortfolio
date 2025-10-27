@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Library System — Abstraction & Info Hiding Demo</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f7f9fc; color:#111; margin:0; padding:24px; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    h1 { margin:0; font-size:20px; }
+    .card { background:white; border-radius:8px; box-shadow:0 6px 18px rgba(20,30,60,0.08); padding:16px; margin-bottom:16px; }
+    .grid { display:grid; gap:12px; grid-template-columns: 1fr 380px; align-items:start; }
+    label { display:block; font-size:13px; margin-bottom:6px; }
+    input[type="text"], select { width:100%; padding:8px 10px; border-radius:6px; border:1px solid #e3e8ef; font-size:14px; }
+    button { padding:8px 12px; border-radius:8px; border:0; background:#2563eb; color:white; cursor:pointer; }
+    .muted { color:#556; font-size:13px; }
+    .book { border-left:4px solid #e6eefc; padding:10px 12px; border-radius:6px; margin-bottom:10px; }
+    .meta { font-size:13px; color:#445; }
+    .small { font-size:13px; }
+    .danger { background:#fff4f4; border-left:4px solid #ffb4b4; }
+    .success { background:#f3fff6; border-left:4px solid #baf5bf; }
+    .role { font-weight:600; color:#0b5; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .right { text-align:right; }
+    .mask { font-family:monospace; letter-spacing:0.08em; }
+    footer { margin-top:18px; font-size:12px; color:#667; }
+    pre { background:#0b1220; color:#dff; padding:10px; border-radius:6px; overflow:auto; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>University Library — Abstraction & Information Hiding (Demo)</h1>
+    <div class="row">
+      <div class="muted" id="currentRole">Role: <span class="role">Guest</span></div>
+      <button id="librarianBtn">Librarian Login (demo)</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <section class="card">
+        <h2 style="margin-top:0">System Overview (abstract entities)</h2>
+        <ul class="muted small">
+          <li><strong>Book</strong> — title, author, category, (hidden: ISBN, publisher, edition, locationCode)</li>
+          <li><strong>Student</strong> — id, name, email, (hidden: fineAmount, borrowHistory)</li>
+          <li><strong>Librarian</strong> — id, name, (hidden: username, passwordHash)</li>
+          <li><strong>BorrowRecord</strong> — links book & student, tracks due/return/fine</li>
+        </ul>
+        <p class="muted small">Abstraction example: Students see only title/author/category/availability; internal fields are hidden by the system.</p>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0">Search Books (student view)</h2>
+        <label for="q">Search by title, author or category</label>
+        <input id="q" type="text" placeholder="e.g., Data Structures, Jane Austen, Programming" />
+        <div style="margin-top:8px;">
+          <button id="searchBtn">Search</button>
+          <button id="showAllBtn" style="background:#0b7">Show All</button>
+        </div>
+
+        <div id="results" style="margin-top:12px"></div>
+        <p class="muted small" style="margin-top:8px">
+          Note: Only public book info (title/author/category/availability) is shown to students. ISBN and location are hidden.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2 style="margin-top:0">Borrow / Return (simulated)</h2>
+        <p class="muted small">Click "Borrow" to simulate a student borrowing a book; due dates and fines are simulated client-side for demo.</p>
+        <div id="borrowArea"></div>
+      </section>
+
+      <section class="card" id="fineArea" style="display:none;">
+        <h2 style="margin-top:0">Fine Details (sensitive)</h2>
+        <p class="muted small">Fine amounts are masked for non-librarians. Librarians can view and update fines.</p>
+        <div id="finesList"></div>
+      </section>
+    </div>
+
+    <aside>
+      <div class="card">
+        <h3 style="margin-top:0">Librarian Panel (demo)</h3>
+        <div id="libPanel">
+          <p class="muted small">Use the "Librarian Login (demo)" button to toggle a demo librarian session. <strong>This is client-side only.</strong></p>
+          <div style="margin-top:8px;">
+            <button id="addBookBtn" style="background:#6b21a8">Add Book</button>
+            <button id="removeBookBtn" style="background:#dc2626">Remove Selected</button>
+          </div>
+          <div style="margin-top:10px;">
+            <label for="newTitle">New book title</label>
+            <input id="newTitle" type="text" placeholder="Book title" />
+            <label for="newAuthor" style="margin-top:8px">Author</label>
+            <input id="newAuthor" type="text" placeholder="Author" />
+            <label for="newCat" style="margin-top:8px">Category</label>
+            <input id="newCat" type="text" placeholder="Category" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card danger">
+        <h4 style="margin-top:0">Security Note</h4>
+        <p class="muted small">
+          This demo stores everything in-memory in the browser for illustration only. <strong>Do not</strong> store credentials or fines in client-side code in real systems. Use server-side authentication, hashed passwords, HTTPS, RBAC, database-level access control and audit logging.
+        </p>
+      </div>
+
+      <div class="card success">
+        <h4 style="margin-top:0">How info hiding is shown here</h4>
+        <ul class="muted small">
+          <li>Fines masked (e.g., "***.**") for guests/students.</li>
+          <li>Librarian-only actions (add/remove books, view fine details) require librarian role.</li>
+          <li>Book details in search show public fields only.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div class="muted">Assignment demo — Abstraction and Information Hiding. Real implementation requires server-side APIs and secure storage.</div>
+  </footer>
+
+  <script>
+    // ========== Demo data (client-side only) ==========
+    // NOTE: In a real system these would come from a server API; sensitive values would never be embedded in client JS.
+    const books = [
+      { id: 'B001', title: 'Data Structures & Algorithms', author: 'A. Goodrich', category: 'Computer Science', availability: true, ISBN: '978-1-2345-0001', publisher:'TechPub', edition: '3rd', locationCode:'A12' },
+      { id: 'B002', title: 'Introduction to Algorithms', author: 'Cormen et al.', category: 'Computer Science', availability: true, ISBN: '978-0-2620-0002', publisher:'MIT Press', edition:'3rd', locationCode:'A13' },
+      { id: 'B003', title: 'Pride and Prejudice', author: 'Jane Austen', category: 'Fiction', availability: true, ISBN: '978-1-9999-0003', publisher:'ClassicBooks', edition:'1st', locationCode:'F07' },
+      { id: 'B004', title: 'Database Systems', author: 'Ramakrishnan', category: 'Computer Science', availability: false, ISBN: '978-1-2222-0004', publisher:'Pearson', edition:'2nd', locationCode:'A20' }
+    ];
+
+    // Simulated students/fines (sensitive: fineAmount)
+    const students = [
+      { id:'S1001', name:'Chandana', email:'chandana@example.edu', fineAmount: 12.50, borrowHistory:[] },
+      { id:'S1002', name:'Ravi', email:'ravi@example.edu', fineAmount: 0.00, borrowHistory:[] }
+    ];
+
+    // borrowRecords (simulated)
+    const borrowRecords = [
+      { id:'R001', bookId:'B004', studentId:'S1001', borrowDate: '2025-10-01', dueDate:'2025-10-15', returnDate:null, fineApplied:0 }
+    ];
+
+    // State: whether demo librarian is "logged in"
+    let isLibrarian = false;
+    let selectedBookId = null;
+
+    // Utility: mask sensitive numbers (e.g., fines) for non-librarians
+    function maskAmount(amount) {
+      if (isLibrarian) return amount.toFixed(2);
+      // e.g., show masked value or a boolean
+      if (amount <= 0) return '0.00';
+      return '***.**';
+    }
+
+    // Render search results
+    function renderResults(list) {
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+      if (list.length === 0) {
+        container.innerHTML = '<div class="muted small">No books found.</div>';
+        return;
+      }
+      list.forEach(b => {
+        const d = document.createElement('div');
+        d.className = 'book';
+        d.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600">${escapeHtml(b.title)}</div>
+              <div class="meta">${escapeHtml(b.author)} • ${escapeHtml(b.category)}</div>
+            </div>
+            <div class="right">
+              <div class="meta">${b.availability ? 'Available' : 'Borrowed'}</div>
+              <div style="margin-top:8px">
+                <button class="selectBtn" data-id="${b.id}" ${b.availability ? '' : 'disabled'}>Select</button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(d);
+      });
+
+      // attach listeners to select buttons
+      Array.from(document.querySelectorAll('.selectBtn')).forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          selectedBookId = e.currentTarget.getAttribute('data-id');
+          renderBorrowArea();
+          highlightSelectedBook();
+        });
+      });
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+    function highlightSelectedBook() {
+      // obvious visual feedback not strictly needed in static demo
+    }
+
+    // Borrow/Return UI
+    function renderBorrowArea() {
+      const area = document.getElementById('borrowArea');
+      area.innerHTML = '';
+      if (!selectedBookId) {
+        area.innerHTML = '<div class="muted small">Select an available book from the results to see borrow/return actions.</div>';
+        return;
+      }
+      const book = books.find(b => b.id === selectedBookId);
+      if (!book) return;
+      const student = students[0]; // demo: acting student
+      const isBorrowed = !book.availability;
+      const html = `
+        <div style="font-weight:600">${escapeHtml(book.title)}</div>
+        <div class="meta">${escapeHtml(book.author)} • ${escapeHtml(book.category)}</div>
+        <div style="margin-top:8px" class="muted small">Actions for student: <strong>${escapeHtml(student.name)}</strong></div>
+        <div style="margin-top:10px">
+          ${isBorrowed ? '<button id="returnBtn">Return Book</button>' : '<button id="borrowBtn">Borrow Book</button>'}
+        </div>
+      `;
+      area.innerHTML = html;
+
+      const borrowBtn = document.getElementById('borrowBtn');
+      const returnBtn = document.getElementById('returnBtn');
+
+      if (borrowBtn) borrowBtn.addEventListener('click', () => {
+        // simulate borrow
+        book.availability = false;
+        const newRec = { id:'R' + (borrowRecords.length+1).toString().padStart(3,'0'), bookId:book.id, studentId:students[0].id, borrowDate: new Date().toISOString().slice(0,10), dueDate: computeDueDate(14), returnDate:null, fineApplied:0 };
+        borrowRecords.push(newRec);
+        alert('Book borrowed. Due date: ' + newRec.dueDate + ' (simulated)');
+        renderResults(books.filter(b => true));
+        renderBorrowArea();
+        renderFines();
+      });
+      if (returnBtn) returnBtn.addEventListener('click', () => {
+        // simulate return: compute fine if overdue (demo)
+        book.availability = true;
+        const rec = borrowRecords.find(r => r.bookId === book.id && !r.returnDate);
+        if (rec) {
+          rec.returnDate = new Date().toISOString().slice(0,10);
+          const overdueDays = computeOverdueDays(rec.dueDate, rec.returnDate);
+          if (overdueDays > 0) {
+            const penalty = overdueDays * 1.5; // ₹1.5/day (demo)
+            rec.fineApplied = penalty;
+            // apply to student
+            const stud = students.find(s => s.id === rec.studentId);
+            if (stud) stud.fineAmount += penalty;
+            alert('Book returned. Overdue days: ' + overdueDays + '. Fine applied: ₹' + penalty.toFixed(2));
+          } else {
+            alert('Book returned on time. No fine.');
+          }
+        }
+        renderResults(books.filter(b => true));
+        renderBorrowArea();
+        renderFines();
+      });
+    }
+
+    function computeDueDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate()+days);
+      return d.toISOString().slice(0,10);
+    }
+    function computeOverdueDays(due, ret) {
+      const dueD = new Date(due);
+      const retD = new Date(ret);
+      const diff = Math.ceil((retD - dueD) / (1000*60*60*24));
+      return Math.max(0,diff);
+    }
+
+    // Fines rendering (sensitive: fine amounts masked for non-librarians)
+    function renderFines() {
+      const area = document.getElementById('finesList');
+      if (!area) return;
+      area.innerHTML = '';
+      students.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'book';
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600">${escapeHtml(s.name)} (${s.id})</div>
+              <div class="meta">${escapeHtml(s.email)}</div>
+            </div>
+            <div class="right">
+              <div class="meta">Outstanding fine: <span class="mask">${maskAmount(s.fineAmount)}</span></div>
+              <div style="margin-top:8px">
+                ${isLibrarian ? `<button class="clearFineBtn" data-id="${s.id}">Clear Fine</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+        area.appendChild(div);
+      });
+
+      Array.from(document.querySelectorAll('.clearFineBtn')).forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const sid = e.currentTarget.getAttribute('data-id');
+          const stud = students.find(x=>x.id===sid);
+          if (!stud) return;
+          const confirmClear = confirm('Set fine to 0 for ' + stud.name + '? (demo)');
+          if (confirmClear) {
+            stud.fineAmount = 0;
+            renderFines();
+            alert('Fine cleared (demo). In real system, a librarian action would create an auditable record.');
+          }
+        });
+      });
+    }
+
+    // Search by query
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const q = document.getElementById('q').value.trim().toLowerCase();
+      if (!q) { renderResults([]); return; }
+      const res = books.filter(b => (b.title + ' ' + b.author + ' ' + b.category).toLowerCase().includes(q));
+      renderResults(res);
+    });
+
+    document.getElementById('showAllBtn').addEventListener('click', () => {
+      renderResults(books.slice());
+    });
+
+    // Librarian login toggle (demo only). REAL systems: perform server-side authentication!
+    document.getElementById('librarianBtn').addEventListener('click', () => {
+      // demo prompt: ask for password - DO NOT do this in production
+      if (!isLibrarian) {
+        const pass = prompt('Enter demo librarian password (hint: "libdemo")');
+        if (pass === 'libdemo') {
+          isLibrarian = true;
+          document.getElementById('currentRole').innerHTML = 'Role: <span class="role">Librarian</span>';
+          document.getElementById('librarianBtn').textContent = 'Logout Librarian (demo)';
+          document.getElementById('fineArea').style.display = 'block';
+          document.getElementById('addBookBtn').disabled = false;
+          document.getElementById('removeBookBtn').disabled = false;
+          renderFines();
+          renderResults(books.slice());
+        } else {
+          alert('Invalid demo password (try "libdemo"). In real app, authenticate via server.');
+        }
+      } else {
+        // logout
+        isLibrarian = false;
+        document.getElementById('currentRole').innerHTML = 'Role: <span class="role">Guest</span>';
+        document.getElementById('librarianBtn').textContent = 'Librarian Login (demo)';
+        document.getElementById('fineArea').style.display = 'none';
+        document.getElementById('addBookBtn').disabled = true;
+        document.getElementById('removeBookBtn').disabled = true;
+        renderResults(books.slice());
+      }
+    });
+
+    // Add book (librarian-only)
+    document.getElementById('addBookBtn').addEventListener('click', () => {
+      if (!isLibrarian) { alert('Librarian actions require login (demo).'); return; }
+      const t = document.getElementById('newTitle').value.trim();
+      const a = document.getElementById('newAuthor').value.trim();
+      const c = document.getElementById('newCat').value.trim();
+      if (!t || !a || !c) { alert('Fill title, author and category (demo).'); return; }
+      const id = 'B' + String( Math.floor(Math.random()*9000)+1000 );
+      books.push({ id, title:t, author:a, category:c, availability:true, ISBN:'demo-ISBN', publisher:'demo', edition:'1st', locationCode:'X' });
+      alert('Book added (demo). In production: librarian addBook() would create a DB record server-side.');
+      document.getElementById('newTitle').value=''; document.getElementById('newAuthor').value=''; document.getElementById('newCat').value='';
+      renderResults(books.slice());
+    });
+
+    // Remove selected book (librarian-only)
+    document.getElementById('removeBookBtn').addEventListener('click', () => {
+      if (!isLibrarian) { alert('Librarian actions require login (demo).'); return; }
+      if (!selectedBookId) { alert('Select a book first (demo).'); return; }
+      const idx = books.findIndex(b=>b.id===selectedBookId);
+      if (idx>=0) {
+        const ok = confirm('Remove "' + books[idx].title + '" from catalog? (demo)');
+        if (ok) {
+          books.splice(idx,1);
+          selectedBookId = null;
+          renderResults(books.slice());
+          renderBorrowArea();
+        }
+      }
+    });
+
+    // initialize
+    renderResults(books.slice());
+    renderBorrowArea();
+    // fines area hidden unless librarian logged in
+    document.getElementById('fineArea').style.display = 'none';
+    document.getElementById('addBookBtn').disabled = true;
+    document.getElementById('removeBookBtn').disabled = true;
+
+  </script>
+</body>
+</html>
