@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Telangana Weather Dashboard</title>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(to right, #2193b0, #6dd5ed);
+      margin: 0;
+      padding: 20px;
+      color: #fff;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      padding: 20px;
+      width: 250px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .city {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .temp {
+      font-size: 2.2em;
+      margin: 10px 0;
+    }
+
+    .icon img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .details {
+      font-size: 0.95em;
+      margin-top: 8px;
+    }
+
+    footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌦 Telangana Weather Dashboard</h1>
+  <p>Live weather updates for major Telangana cities</p>
+
+  <div class="container" id="weatherContainer"></div>
+
+  <footer>
+    <p>Data sourced from <a href="https://openweathermap.org/" target="_blank" style="color:#fff;">OpenWeather API</a></p>
+  </footer>
+
+  <script>
+    const apiKey = "5bfb18fb607f41bc81d63931251011";
+    const cities = ["Hyderabad", "Warangal", "Karimnagar", "Khammam", "Nizamabad", "Nalgonda", "Adilabad"];
+
+    async function fetchWeather(city) {
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city},IN&units=metric&appid=${apiKey}`
+        );
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("Error fetching weather:", error);
+      }
+    }
+
+    async function displayWeather() {
+      const container = document.getElementById("weatherContainer");
+      container.innerHTML = "";
+
+      for (const city of cities) {
+        const data = await fetchWeather(city);
+
+        if (data.cod === 200) {
+          const card = document.createElement("div");
+          card.classList.add("card");
+
+          const weatherIcon = data.weather[0].icon;
+          const forecast = data.weather[0].description;
+
+          card.innerHTML = `
+            <div class="city">${data.name}</div>
+            <div class="icon"><img src="https://openweathermap.org/img/wn/${weatherIcon}@2x.png" alt="Weather icon"></div>
+            <div class="temp">${data.main.temp.toFixed(1)}°C</div>
+            <div class="details">
+              🌡️ Feels Like: ${data.main.feels_like.toFixed(1)}°C<br>
+              💧 Humidity: ${data.main.humidity}%<br>
+              🌬️ Wind Speed: ${data.wind.speed} m/s<br>
+              ☁️ Forecast: ${forecast.charAt(0).toUpperCase() + forecast.slice(1)}
+            </div>
+          `;
+          container.appendChild(card);
+        } else {
+          console.warn(`No data for ${city}`);
+        }
+      }
+    }
+
+    displayWeather();
+  </script>
+</body>
+</html>
