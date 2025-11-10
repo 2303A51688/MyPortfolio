@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chandhana Muthyala | Portfolio</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f2f5fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #4b6cb7;
+      background-image: linear-gradient(315deg, #4b6cb7 0%, #182848 74%);
+      color: white;
+      text-align: center;
+      padding: 50px 20px;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+    }
+
+    header h2 {
+      font-size: 1.3rem;
+      font-weight: 300;
+    }
+
+    section {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h3 {
+      color: #4b6cb7;
+      border-bottom: 2px solid #4b6cb7;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    ul {
+      list-style-type: square;
+      padding-left: 20px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #182848;
+      color: white;
+      font-size: 0.9rem;
+      margin-top: 40px;
+    }
+
+    .contact {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #4b6cb7;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #35478b;
+    }
+
+    .test-result {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Chandhana Muthyala</h1>
+    <h2>Student</h2>
+  </header>
+
+  <section id="about">
+    <h3>About Me</h3>
+    <p>
+      Hello! I'm <strong>Chandhana Muthyala</strong>, a dedicated and passionate student interested in learning, exploring new technologies, and developing creative projects that enhance my technical and problem-solving skills.
+    </p>
+  </section>
+
+  <section id="projects">
+    <h3>Certificates & Projects</h3>
+    <ul>
+      <li>Certified in HTML, CSS, and JavaScript Foundations</li>
+      <li>Developed a simple Weather Forecast Application using API integration</li>
+      <li>Completed a Responsive Portfolio Website project</li>
+    </ul>
+  </section>
+
+  <section id="contact">
+    <h3>Contact Details</h3>
+    <div class="contact">
+      <p><strong>Phone:</strong> +91 XXXXX XXXXX</p>
+      <p><strong>Email:</strong> chandhanamuthyala3153@gmail.com</p>
+
+      <h4>Test Email Validation</h4>
+      <input type="text" id="emailInput" placeholder="Enter an email to test validation">
+      <button onclick="runEmailUnitTest()">Run Test</button>
+      <div id="testResult" class="test-result"></div>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 Chandhana Muthyala. All Rights Reserved.
+  </footer>
+
+  <script>
+    // Function to validate email format
+    function validateEmail(email) {
+      const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      return emailPattern.test(email);
+    }
+
+    // Unit testing feature for email validation (Interactive)
+    function runEmailUnitTest() {
+      const emailInput = document.getElementById("emailInput").value.trim();
+      const resultDiv = document.getElementById("testResult");
+
+      if (emailInput === "") {
+        resultDiv.textContent = "❌ Please enter an email address.";
+        resultDiv.style.color = "red";
+        return;
+      }
+
+      if (validateEmail(emailInput)) {
+        resultDiv.textContent = "✅ Valid Email Format!";
+        resultDiv.style.color = "green";
+      } else {
+        resultDiv.textContent = "❌ Invalid Email Format!";
+        resultDiv.style.color = "red";
+      }
+    }
+
+    // Automated Unit Tests (console-based)
+    const testEmails = [
+      "chandhanamuthyala3153@gmail.com", // valid
+      "chandhana@",                      // invalid
+      "test.user@domain.com",            // valid
+      "invalid-email",                   // invalid
+      "user@domain.co.in"                // valid
+    ];
+
+    console.log("----- Running Email Validation Unit Tests -----");
+    testEmails.forEach(email => {
+      console.log(`${email} → ${validateEmail(email) ? "Valid ✅" : "Invalid ❌"}`);
+    });
+  </script>
+
+</body>
+</html>
